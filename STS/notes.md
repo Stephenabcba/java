@@ -1,40 +1,43 @@
 # Setting up a Spring project
 [Copy Paste](#copy-paste)
 1. New-> Spring Starter Project
-   - part1:
-      - name: all lowercase, can have hyphens "-" ex: `my-project`
+   - Part1:
+      - Name: all lowercase, can have hyphens "-" ex: `my-project`
         - this is projectname
       - Type: `Maven Project`
       - Packaging: `War`
       - Java Version: `8`
       - Language: `Java`
       - Group: `com.something.projectname`
-      - artifact: `projectname`
-      - version:leave default
-      - description: give a description
-      - package: same as Group, `com.something.projectname`
-    - part2 (dependencies):
+      - Artifact: `projectname`
+      - Version: leave default
+      - Description: give a description
+      - Package: same as Group, `com.something.projectname`
+    - Part2 (dependencies):
       - `Spring Web`
       - `Spring Boot DevTools` (to auto restart server on save)
 2. Set up Dependencies
-   - `pom.xml` in root directory
-   - Dependencies to add: [Dependencies](#dependencies)
+   - Put dependencies inside `pom.xml` in root directory
+   - [Dependencies](#dependencies) to add: 
      - `jstl` (javax.servlet)
      - `tamcat-embed-jasper`
-     - bootstrap related (see [dependencies](#dependencies))
+     - Bootstrap related (see [dependencies](#dependencies))
 3. Set up for jsp templates
     - Create `WEB-INF` folder under `src/main/webapp`
-    - In `application.properties` [paste](#jsp)
-    - Create any .jsp files under `WEB-INF`
+    - [Paste this line](#jsp) in `application.properties` 
+    - Create all .jsp files under `WEB-INF`
 4. Set up static files (js and css)
-    - create `js` and `css` folders under `src/main/resources/static`
+    - Create `js` and `css` folders under `src/main/resources/static`
 5. Controller & Routing
-   - create `controllers` package under `src/main/java`
+   - Create `controllers` package under `src/main/java`
      - ex: `com.example.projectname.controllers`
-   - create controller java class in `controllers`
+   - Create controller java class in `controllers`
      - ex: `ControllerXYZ.java`
    - [Sample Controller Formatting](#controllers)
-6. JSP MAGIC
+6. Models
+   - Create `models` package under `src/main/java`
+   - Models may or may not be related to an item in database
+7. JSP MAGIC
    - [Using JSTL](#jsp-magic)
    - [Using java in jsp](#jsp-magic-2)
 
