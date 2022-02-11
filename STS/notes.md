@@ -34,7 +34,9 @@
    - create java class in ```controllers```
      - ex: `ControllerXYZ.java`
    - [Sample Controller Formatting](#controllers)
-6. 
+6. JSP MAGIC
+   - [Using JSTL](#jsp-magic)
+   - [Using java in jsp](#jsp-magic-2)
 
 
 
@@ -85,29 +87,30 @@
        - the source calls start from ```src/main/resources/static/```
      - Bootstrap related functionality requires setting up dependencies
      ```html
-     <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
-     pageEncoding="ISO-8859-1"%>
-     <%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core" %>
+     <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
      <!DOCTYPE html>
-     <html>
+     <html lang="en">
      <head>
-     <meta charset="ISO-8859-1">
-     <title>Hello World</title>
-     <!-- for Bootstrap CSS -->
-     <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
-     <!-- for internal CSS -->
-     <link rel="stylesheet" href="/css/style.css" />
+         <meta charset="UTF-8">
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Hello World</title>
+         <!-- for Bootstrap CSS -->
+         <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
+         <!-- for internal CSS -->
+         <link rel="stylesheet" href="/css/style.css" />
      </head>
      <body>
-     <div class="container pt-5">
-         <h1>Hello World</h1>
-     </div>
+         <div class="container pt-5">
+             <h1>Hello World</h1>
+         </div>
 
-     <!-- For any Bootstrap that uses JS or jQuery-->
-     <script src="/webjars/jquery/jquery.min.js"></script>
-     <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
-     <!-- internal script -->
-     <script type="text/javascript" src="/js/script.js"></script>
+         <!-- For any Bootstrap that uses JS or jQuery-->
+         <script src="/webjars/jquery/jquery.min.js"></script>
+         <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+         <!-- internal script -->
+         <script type="text/javascript" src="/js/script.js"></script>
      </body>
      </html>
      ```
@@ -197,8 +200,35 @@
    - AKA JSTL
    - done in HTML
    - forEach loop:
+     - people is the array in this example
+     - person is the variable that we set as the current item in the array
+       - we could rename person to banana and this will still work
+     - name (or person.name) is a member variable of the Object named person
+       - name could be a private member variable
+         - JSTL will use our getters and setters to get value of variable
+           - THIS MEANS WE MUST MAKE OUR GETTER & SETTER METHODS
      ```HTML
      <c:forEach var="person" items="${people}">
          <c:out value="${person.name}"/>
      </c:forEach>
+     ```
+
+## JSP magic 2
+  - Running java code in jsp files
+  - for loop:
+     ```html
+     <% for(int i = 0; i < 5; i++) { %>
+             <h1><%= i %></h1>
+     <% } %>
+     ```
+   - running javacode with imports
+     - in this example, we import Date and get current time in the body
+       - we added `import="java.util.Date"` to top of the page
+     ```html
+     <!-- top of page -->
+     <%@ page language="java" contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8" import="java.util.Date"%>
+
+     <!-- within body -->
+     <p>The time is: <%= new Date() %></p>
      ```
