@@ -100,7 +100,7 @@
      </head>
      <body>
      <div class="container pt-5">
-        <h1>Hello World</h1>
+         <h1>Hello World</h1>
      </div>
 
      <!-- For any Bootstrap that uses JS or jQuery-->
@@ -191,4 +191,14 @@
      public String travelTo(@PathVariable("location") String location) { 
          return "Congratulations! You will soon travel to " + location + "!";
      }
+     ```
+
+## JSP magic
+   - AKA JSTL
+   - done in HTML
+   - forEach loop:
+     ```HTML
+     <c:forEach var="person" items="${people}">
+         <c:out value="${person.name}"/>
+     </c:forEach>
      ```
