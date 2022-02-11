@@ -2,36 +2,36 @@
 [Copy Paste](#copy-paste)
 1. New-> Spring Starter Project
    - part1:
-      - name: all lowercase, can have hyphens "-" ex: my-project
+      - name: all lowercase, can have hyphens "-" ex: `my-project`
         - this is projectname
-      - Type: Maven Project
-      - Packaging: War
-      - Java Version: 8
-      - Language: Java
-      - Group: com.something.projectname
-      - artifact: projectname
+      - Type: `Maven Project`
+      - Packaging: `War`
+      - Java Version: `8`
+      - Language: `Java`
+      - Group: `com.something.projectname`
+      - artifact: `projectname`
       - version:leave default
       - description: give a description
-      - package: same as group
+      - package: same as Group, `com.something.projectname`
     - part2 (dependencies):
-      - Spring Web
-      - Spring Boot DevTools (to auto restart server on save)
+      - `Spring Web`
+      - `Spring Boot DevTools` (to auto restart server on save)
 2. Set up Dependencies
-   - pom.xml in root directory
+   - `pom.xml` in root directory
    - Dependencies to add: [Dependencies](#dependencies)
-     - jstl (javax.servlet)
-     - tamcat-embed-jasper
-     - bootstrap related (see bottom)
+     - `jstl` (javax.servlet)
+     - `tamcat-embed-jasper`
+     - bootstrap related (see [dependencies](#dependencies))
 3. Set up for jsp templates
-    - Create ```WEB-INF``` folder under ```src/main/webapp```
-    - In ```application.properties``` [paste](#jsp)
-    - Create any .jsp files under ```WEB-INF```
+    - Create `WEB-INF` folder under `src/main/webapp`
+    - In `application.properties` [paste](#jsp)
+    - Create any .jsp files under `WEB-INF`
 4. Set up static files (js and css)
-    - create ```js``` and ```css``` folders under ```src/main/resources/static```
+    - create `js` and `css` folders under `src/main/resources/static`
 5. Controller & Routing
-   - create ```controllers``` package under ```src/main/java```
-     - ex: ```com.example.projectname.controllers```
-   - create java class in ```controllers```
+   - create `controllers` package under `src/main/java`
+     - ex: `com.example.projectname.controllers`
+   - create controller java class in `controllers`
      - ex: `ControllerXYZ.java`
    - [Sample Controller Formatting](#controllers)
 6. JSP MAGIC
@@ -43,7 +43,7 @@
 
 # Copy Paste
 ## Dependencies
-   - put in pom.xml under ```<dependencies>```
+   - put under `<dependencies>` in `pom.xml`
    - for java functionality in HTML
      ``` xml
      <dependency>
@@ -78,13 +78,14 @@
      ```
 
 ## JSP
-  - in ```application.properties``` under ```src/main/resources```
+  - in `application.properties` under `src/main/resources`
      ```
      spring.mvc.view.prefix=/WEB-INF/
      ```
    - Sample .jsp file:
-     - local css and js files live under ```src/main/resources/static/css``` and ```src/main/resources/static/js```
-       - the source calls start from ```src/main/resources/static/```
+     - put local css and js files in `src/main/resources/static/css` and `src/main/resources/static/js`
+       - the source calls start from `src/main/resources/static/`
+         - ex: `href="/css/style.css"`
      - Bootstrap related functionality requires setting up dependencies
      ```html
      <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
@@ -140,8 +141,8 @@
       }
       ```
    - `@Controller` annotation will process JSP (Java Server Pages) files
-     - .jsp files live under ```WEB-INF```
-     - in this case, index.jsp must exist 
+     - .jsp files live under `WEB-INF`
+     - in this case, index.jsp must exist
       ```java
       // all routes of name ROUTENAME under this controller will start with route of /api/ROUTNAME
       // the first method goes to /api
@@ -155,9 +156,9 @@
       }
       ```
    - 3 Ways of getting mapping (different annotations)
-     - RequestMapping (default is GET)
-     - RequestMapping, explicit definition of method
-     - GetMapping
+     - `RequestMapping` (default is GET)
+     - `RequestMapping`, explicit definition of method
+     - `GetMapping`
      ```java
      // Get mapping option 1
      // route: /api/today
@@ -179,9 +180,9 @@
      }
      ```
    - Request Parameters
-     - has question mark in the route
-     - by default, RequestParam has required=true
-       - need to explicitly set to false if the field is optional
+     - has question mark `?` in the route
+     - by default, RequestParam has `required=true`
+       - need to explicitly set `required=false` if the field is optional
      ```java
      // Request Parameters
      // route: /api/params?name=Mickey&last_name=Mouse
@@ -195,7 +196,7 @@
    - Path Variables
      - only has slashes
      - name in {pathName} must match `@Pathvariable("pathName")` 
-     - name in `String varName` is the name used inside the method
+     - name of `String varName` is the variable name used inside the method
      ```java
      // Path variables
      // route: /api/travel/Hawaii, where Hawaii is a variable name
