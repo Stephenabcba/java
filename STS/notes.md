@@ -27,7 +27,7 @@
     - In ```application.properties``` [paste](#jsp)
     - Create any .jsp files under ```WEB-INF```
 4. Set up static files (js and css)
-    - create ```js``` and ```css``` folder under ```src/main/resources/static```
+    - create ```js``` and ```css``` folders under ```src/main/resources/static```
 5. Controller & Routing
    - create ```controllers``` package under ```src/main/java```
      - ex: ```com.example.projectname.controllers```
