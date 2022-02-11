@@ -36,6 +36,7 @@
    - [Sample Controller Formatting](#controllers)
 6. Models
    - Create `models` package under `src/main/java`
+     - ex: `com.example.projectname.models`
    - Models may or may not be related to an item in database
 7. JSP MAGIC
    - [Using JSTL](#jsp-magic)
