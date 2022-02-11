@@ -116,8 +116,17 @@
      ```
 
 ## Controllers
-   - `@RestController` annotation will only process text or JSON outputs as return, can have simple html tags
-     - ex for returning HTML tag: `return "<h1> this will be an h1 </h1>";`
+   - When missing import statements, use `Ctrl + Shift + o` to import all missing packages
+     - we usually use `java.util.Date` for Date package (instead of the sql variant)
+     - o as in oranges
+     - for macOS: `Command + Shift + o`
+   - `@RequestMapping("/apis")` on top of class is optional
+     - having this annotation will append /api/ to all mapping/routes in this class
+     - all route examples in this section assume the request mapping is added
+   - `@RestController` annotation will only process text or JSON outputs as return
+     - this means the page will display plain text instead of an entire html page
+     - can have simple html tags
+       - ex: `return "<h1> this will be an h1 </h1>";`
       ```java
       // all routes of name ROUTENAME under this controller will start with route of /api/ROUTNAME
       // the first method goes to /api
@@ -126,12 +135,13 @@
       public class ControllerText {
           @RequestMapping("")
           public String Welcome() {
-              return "welcome";
+              return "Welcome";
           }
       }
       ```
-   - `@Controller` mapping will process JSP (Java Server Pages) files
+   - `@Controller` annotation will process JSP (Java Server Pages) files
      - .jsp files live under ```WEB-INF```
+     - in this case, index.jsp must exist 
       ```java
       // all routes of name ROUTENAME under this controller will start with route of /api/ROUTNAME
       // the first method goes to /api
