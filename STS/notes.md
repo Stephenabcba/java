@@ -31,12 +31,14 @@
 5. Controller & Routing
    - Create `controllers` package under `src/main/java`
      - ex: `com.example.projectname.controllers`
-   - Create controller java class in `controllers`
+   - Create controller java class in `controllers` package
      - ex: `ControllerXYZ.java`
    - [Sample Controller Formatting](#controllers)
 6. Models
    - Create `models` package under `src/main/java`
      - ex: `com.example.projectname.models`
+   - Create model java class in `models` package
+     - ex: `ModelXYZ.java`
    - Models may or may not be related to an item in database
 7. JSP MAGIC
    - [Using JSTL](#jsp-magic)
