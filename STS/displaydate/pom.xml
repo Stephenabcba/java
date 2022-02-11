@@ -47,7 +47,7 @@
 			<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>
 		</dependency>
-		    <!-- webjars locator dependency enables auto-detection of the version, so your .jsp 
+		<!-- webjars locator dependency enables auto-detection of the version, so your .jsp 
         file links are version-agnostic in case you update the versions here in your pom later -->
 		<dependency>
         	<groupId>org.webjars</groupId>
