@@ -85,8 +85,10 @@
     - Service Layer (SL): handles business logic
       - communicates with controllers and the persistence layer
     - 3 Parts:
-      - Domain model
+      - Domain model [here](#domain_model)
         - Lives in `com.example.projectname.models`
+      - Data Repository
+        - LIves in `com.example.projectname.repositories`
 
 # Copy Paste
 ## Dependencies
@@ -443,7 +445,7 @@
     ```
     spring.datasource.driver-class-name=com.mysql.jdbc.Driver
     ```
-  - Domain Model
+  - <a name="domain_model">Domain Model</a>
     - uses `javax.persistence.Entity` and `javax.persistence.Table` packages
     - domain model files should be in java bean format
       - getters and setters
@@ -463,51 +465,50 @@
       - `@PrePersist` runs the method right before the object is created
       - `@PreUpdate` runs a method when the object is modified
     - Spring will create the table in database when we run the server
-``` java
-@Entity
-@Table(name="tableNames")
-public class TableName {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @NotNull
-    @Size(min = 5, max = 200)
-    private String title;
-    @NotNull
-    @Size(min = 5, max = 200)
-    private String description;
-    @NotNull
-    @Size(min = 3, max = 40)
-    private String language;
-    @NotNull
-    @Min(100)
-    private Integer numberOfPages;
-    // This will not allow the createdAt column to be updated after creation
-    @Column(updatable=false)
-    @DateTimeFormat(pattern="yyyy-MM-dd")
-    private Date createdAt;
-    @DateTimeFormat(pattern="yyyy-MM-dd")
-    private Date updatedAt;
-    
-    public Book() {
+    ``` java
+    @Entity
+    @Table(name="tableNames")
+    public class TableName {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        @NotNull
+        @Size(min = 5, max = 200)
+        private String title;
+        @NotNull
+        @Size(min = 5, max = 200)
+        private String description;
+        @NotNull
+        @Size(min = 3, max = 40)
+        private String language;
+        @NotNull
+        @Min(100)
+        private Integer numberOfPages;
+        // This will not allow the createdAt column to be updated after creation
+        @Column(updatable=false)
+        @DateTimeFormat(pattern="yyyy-MM-dd")
+        private Date createdAt;
+        @DateTimeFormat(pattern="yyyy-MM-dd")
+        private Date updatedAt;
+        
+        public Book() {
+        }
+        public Book(String title, String desc, String lang, int pages) {
+            this.title = title;
+            this.description = desc;
+            this.language = lang;
+            this.numberOfPages = pages;
+        }
+        
+        // other getters and setters removed for brevity
+        // TODO: ADD GETTERS AND SETTERS
+        @PrePersist
+        protected void onCreate(){
+            this.createdAt = new Date();
+        }
+        @PreUpdate
+        protected void onUpdate(){
+            this.updatedAt = new Date();
+        }
     }
-    public Book(String title, String desc, String lang, int pages) {
-        this.title = title;
-        this.description = desc;
-        this.language = lang;
-        this.numberOfPages = pages;
-    }
-    
-    // other getters and setters removed for brevity
-    @PrePersist
-    protected void onCreate(){
-        this.createdAt = new Date();
-    }
-    @PreUpdate
-    protected void onUpdate(){
-        this.updatedAt = new Date();
-    }
-}
-
-
-```
+    ```
