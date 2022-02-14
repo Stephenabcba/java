@@ -85,10 +85,18 @@
     - Service Layer (SL): handles business logic
       - communicates with controllers and the persistence layer
     - 3 Parts:
-      - Domain model [here](#domain_model)
-        - Lives in `com.example.projectname.models`
-      - Data Repository
-        - LIves in `com.example.projectname.repositories`
+      1. Domain model (details [here](#domain_model))
+         - Lives in `com.example.projectname.models`
+         - Provides models of our database tables
+           - attributes are the columns of tables
+      2. Data Repository (details [here](#repository))
+         - Lives in `com.example.projectname.repositories`
+         - Provides SQL queries in the form of method signatures
+      3. Services
+         - Lives in `com.example.projectname.services`
+         - Business logic of our application
+    - Utilizing our database functionality in the [controller api](#db_controller_api)
+      - logic here is similar to our controllers before db implementation
 
 # Copy Paste
 ## Dependencies
@@ -144,6 +152,45 @@
         <artifactId>spring-boot-starter-validation</artifactId>
       </dependency>
       ```
+
+## JSP
+  - in `application.properties` under `src/main/resources`
+     ```
+     spring.mvc.view.prefix=/WEB-INF/
+     ```
+   - Sample .jsp file:
+     - put local css and js files in `src/main/resources/static/css` and `src/main/resources/static/js`
+       - the source calls start from `src/main/resources/static/`
+         - ex: `href="/css/style.css"`
+     - Bootstrap related functionality requires setting up dependencies
+     ```html
+     <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+     <!DOCTYPE html>
+     <html lang="en">
+     <head>
+         <meta charset="UTF-8">
+         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Hello World</title>
+         <!-- for Bootstrap CSS -->
+         <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
+         <!-- for internal CSS -->
+         <link rel="stylesheet" href="/css/style.css" />
+     </head>
+     <body>
+         <div class="container pt-5">
+             <h1>Hello World</h1>
+         </div>
+
+         <!-- For any Bootstrap that uses JS or jQuery-->
+         <script src="/webjars/jquery/jquery.min.js"></script>
+         <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+         <!-- internal script -->
+         <script type="text/javascript" src="/js/script.js"></script>
+     </body>
+     </html>
+     ```
 
 ## Controllers
    - When missing import statements, use `Ctrl + Shift + o` to import all missing packages
@@ -307,45 +354,6 @@
       }
       ```
 
-## JSP
-  - in `application.properties` under `src/main/resources`
-     ```
-     spring.mvc.view.prefix=/WEB-INF/
-     ```
-   - Sample .jsp file:
-     - put local css and js files in `src/main/resources/static/css` and `src/main/resources/static/js`
-       - the source calls start from `src/main/resources/static/`
-         - ex: `href="/css/style.css"`
-     - Bootstrap related functionality requires setting up dependencies
-     ```html
-     <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-     <!DOCTYPE html>
-     <html lang="en">
-     <head>
-         <meta charset="UTF-8">
-         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <title>Hello World</title>
-         <!-- for Bootstrap CSS -->
-         <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
-         <!-- for internal CSS -->
-         <link rel="stylesheet" href="/css/style.css" />
-     </head>
-     <body>
-         <div class="container pt-5">
-             <h1>Hello World</h1>
-         </div>
-
-         <!-- For any Bootstrap that uses JS or jQuery-->
-         <script src="/webjars/jquery/jquery.min.js"></script>
-         <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
-         <!-- internal script -->
-         <script type="text/javascript" src="/js/script.js"></script>
-     </body>
-     </html>
-     ```
-
 ## JSP magic
    - AKA JSTL
    - done in .jsp (template file)
@@ -426,7 +434,7 @@
 
 ## Database
  - In `application.properties`
-   - Change schema name, dbuser, and dbpassword 
+   - **Change** `schema name`, `dbuser`, and `dbpassword `
      - may need to change port number as needed
    - The webserver **WILL NOT** run unless the schema (database) exists and MySQL server has started
      - Tables inside the schema do not need to be created
@@ -465,6 +473,7 @@
       - `@PrePersist` runs the method right before the object is created
       - `@PreUpdate` runs a method when the object is modified
     - Spring will create the table in database when we run the server
+    - `TableName.java` in `com.example.projectname.models`:
     ``` java
     @Entity
     @Table(name="tableNames")
@@ -509,6 +518,96 @@
         @PreUpdate
         protected void onUpdate(){
             this.updatedAt = new Date();
+        }
+    }
+    ```
+  - <a name="repository">Repository</a>
+    - Spring will generate queries for us based on method signature in this `interface` file
+      - we do not need to do anything beyond declaring these method signatures
+    - `BookRepository` can be any name, but we usually call it model_name + Repository for clarity
+    - all repository interfaces must extend `CrudRepository`, and the first data type is the name of our model (`Book` class) and the seond datatype is the primary key of our model (`Long` id)
+    - CrudRepository has some built in methods that we can already utilize such as count, delete, save, etc.
+    - `TableNameRepository.java` in `com.example.projectname.repositories`:
+    ``` java
+    // ...
+    @Repository
+    public interface BookRepository extends CrudRepository<Book, Long>{
+        // this method retrieves all the books from the database
+        List<Book> findAll();
+        // this method finds books with descriptions containing the search string
+        List<Book> findByDescriptionContaining(String search);
+        // this method counts how many titles contain a certain string
+        Long countByTitleContaining(String search);
+        // this method deletes a book that starts with a specific title
+        Long deleteByTitleStartingWith(String search);
+    }
+    ```
+  - <a name="service">Service</a>
+    - wraps our repository methods into methods that we will actually call in the controller
+    - the variable name `bookRepository` is a name that we chose
+      - we could rename it to `bookRepo` for short-hand notation
+    - `TableNameService.java` in `com.example.projectname.services`:
+    ``` java
+    // ...
+    import org.springframework.stereotype.Service;
+    import com.codingdojo.mvc.models.Book;
+    @Service
+    public class BookService {
+        // adding the book repository as a dependency
+        private final BookRepository bookRepository;
+        
+        public BookService(BookRepository bookRepository) {
+            this.bookRepository = bookRepository;
+        }
+        // returns all the books
+        public List<Book> allBooks() {
+            return bookRepository.findAll();
+        }
+        // creates a book
+        public Book createBook(Book b) {
+            return bookRepository.save(b);
+        }
+        // retrieves a book
+        public Book findBook(Long id) {
+            Optional<Book> optionalBook = bookRepository.findById(id);
+            if(optionalBook.isPresent()) {
+                return optionalBook.get();
+            } else {
+                return null;
+            }
+        }
+    }
+    ```
+  - <a name="db_controller_api">Database Controller API</a>
+    - We are only calling methods from [TableNameService class](#service)
+      - our service class will handle calls to the repository
+    - `final` on the Service instance ensures that we are using the same Service instance every time
+    - `TableNameApi.java` in `com.example.projectname.controllers`:
+    ``` java
+    // ..
+    import com.codingdojo.mvc.models.Book;
+    import com.codingdojo.mvc.services.BookService;
+    @RestController
+    public class BooksApi {
+        private final BookService bookService;
+        public BooksApi(BookService bookService){
+            this.bookService = bookService;
+        }
+        @RequestMapping("/api/books")
+        public List<Book> index() {
+            return bookService.allBooks();
+        }
+        
+        @RequestMapping(value="/api/books", method=RequestMethod.POST)
+        public Book create(@RequestParam(value="title") String title, @RequestParam(value="description") String desc, @RequestParam(value="language") String lang, @RequestParam(value="pages") Integer numOfPages) {
+            Book book = new Book(title, desc, lang, numOfPages);
+            return bookService.createBook(book);
+        }
+        
+        @RequestMapping("/api/books/{id}")
+        public Book show(@PathVariable("id") Long id) {
+            Book book = bookService.findBook(id);
+            return book;
         }
     }
     ```
