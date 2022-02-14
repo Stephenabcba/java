@@ -18,7 +18,10 @@ public class ControllerCount {
 	}
 	
 	@GetMapping("/counter")
-	public String counter() {
+	public String counter(HttpSession session) {
+		if (session.getAttribute("count") == null) {
+			session.setAttribute("count", 0);
+		}
 		return "counter.jsp";
 	}
 }

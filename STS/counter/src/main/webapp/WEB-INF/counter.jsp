@@ -12,7 +12,7 @@
 </head>
 <body>
     <div class="container pt-5">
-        <p>You have visited <a href="/">the Main Page</a>${count } times</p>
+        <p>You have visited <a href="/">the Main Page</a> ${count } times</p>
         <a href="/">Test another visit?</a>
     </div>
 
