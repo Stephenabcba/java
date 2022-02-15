@@ -42,7 +42,7 @@
    - Create controller java class in `controllers` package
      - ex: `ControllerXYZ.java`
    - [Sample Controller Formatting](#controllers)
-6. Models (different from `Model model` when passing data to .jsp files)
+6. Models (**different** from `Model model` when passing data to .jsp files)
    - Create `models` package under `src/main/java`
      - ex: `com.example.projectname.models`
    - Create model java class in `models` package
@@ -52,33 +52,38 @@
    - [Using JSTL](#jsp-magic)
    - [Using java in .jsp files](#jsp-magic-2)
 8. Passing Variables into .jsp Files
-   - Use `Model model`, data added in [controller](#controllers)
+   - Use `Model model`, data added in [controller](#model_model)
    - `.jsp` file can handle the data using [JSTL](#jsp-magic)
 9.  Session
     - Store data that **persists** through pages
     - Data in session stored as `Object` data type
+    - See code [here](#session)
 11. Forms (GET / POST method)
     - if a form is sent using a GET method, the form is sent through query params
       - could be good for a seach bar
       - many problems if used for login, including security and unwanted behavior
     - To use POST method, the form in jsp must have `method="post"`
-    - How the controller should handle [this](#controllers)
+    - How the controller should handle [this](#post_form)
       - The form is still received using query parameters
     - **NEVER** return a page on a POST method
       - the form gets processed again
       - redirect to a GET method instead
-11. Flash Data 
+    - General form procedures
+      1. Render the form (get request with form)
+      2. Process the form (post request with redirect)
+      3. Show the form (get request, redirected from #2)
+12. Flash Data 
     - Only persists for **one** HTML request
     - Is a type of session data
     - Useful for *error messages* and *notifications*
-    - Flash messages added in [controller](#controllers)
+    - Flash messages added in [controller](#flash)
     - The .jsp files handle flash messages using [JSTL](#jsp-magic)
-12. Why we don't need to instantiate Model model, HttpSession session, etc
+13. We don't need to instantiate Model model, HttpSession session, etc explicitly
     - Inversion of Control (IoC)
       - inverted pattern from usual control flow
     - IoC container finds the dependencies and instantiates them as needed
       - handles Dependency Injection for us
-13. Database Functionalities (see [Database](#database))
+14. Database Functionalities (see [Database](#database))
     - Persistence Layer (PL): manages application's data (DB interactions)
       - includes domain models and repositories
       - communication done with Object Relational Mapper (ORM)
@@ -282,7 +287,7 @@
          return "Congratulations! You will soon travel to " + location + "!";
      }
      ```
-   - Model model
+   - <a name="model_model">Model model</a>
      - Passing data to the jsp template
      - stored in key-value pairs
      - Can hold different types of data
@@ -296,7 +301,7 @@
           return "index.jsp";
       }
       ```
-   - Session
+   - <a name="session">Session</a>
      - Data in session is stored as `Object` type
      - store data using `setAttribute`
        - can also be used to update data in session
@@ -324,21 +329,23 @@
         //do something
       }
       ```
-   - Handling Forms and POST method
+   - <a name="post_form"></a>Handling Forms and POST method
      - the method will redirect to /confirm
-       - cofirm could be a GET page that returns a jsp file
+       - /cofirm could be a GET page that returns a jsp file
      - can process data as needed or store in session
      - can also use `PostMapping('/route')` as shorthand for RequestMapping with POST
+     - Parsing HTML form date/time input requires `@DateTimeFormat`
+       - formating similar to SimpleDateFormat class
      ``` java
      @RequestMapping(value="/process", method=RequestMethod.POST)
      public String process(
          @RequestParam(value="input1") String input1,
-         @RequestParam(value="dateInput") Date dateInput) {
+         @RequestParam(value="dateInput") @DateTimeFormat(pattern="yyyy-MM-dd") Date dateInput) {
          System.out.println(input1 + " was received.");
          return "redirect:/confirm";
      }
      ```
-   - Flash
+   - <a name="flash">Flash</a>
      - adding a flash attribute to `RedirectAttribute` instance
      - flashed messages are handled the same ways as model attributes in jsp
        - disappears after shown once
@@ -411,6 +418,19 @@
       ```HTML
       <p><c:out value="${error}"/></p>
       ```
+   - Formating date in JSTL:
+     - first one formats a date object into a date format
+     - second one formats a date object into a date format
+     - date is a variable either instantiated in jsp or from model, session, etc
+       - it should be a Date object
+      ``` jsp
+      <!-- top of page -->
+      <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+
+      <!-- in body -->
+      <fmt:formatDate type="date" value="${date}">
+      <fmt:formatDate type="time" value="${date}">
+      ```
 
 ## JSP magic 2
   - Running java code in jsp files
@@ -473,6 +493,8 @@
       - `@PrePersist` runs the method right before the object is created
       - `@PreUpdate` runs a method when the object is modified
     - Spring will create the table in database when we run the server
+    - Attribute names in Java should be in `camelCase`
+      - JPA will automatically convert them to snake_case
     - `TableName.java` in `com.example.projectname.models`:
     ``` java
     @Entity
@@ -502,9 +524,9 @@
         
         public Book() {
         }
-        public Book(String title, String desc, String lang, int pages) {
+        public Book(String title, String description, String lang, int pages) {
             this.title = title;
-            this.description = desc;
+            this.description = description;
             this.language = lang;
             this.numberOfPages = pages;
         }
@@ -559,6 +581,11 @@
         public BookService(BookRepository bookRepository) {
             this.bookRepository = bookRepository;
         }
+
+        // Option 2, can skip private final + constructor
+        @Autowired
+        private BookRepository bookRepository;
+
         // returns all the books
         public List<Book> allBooks() {
             return bookRepository.findAll();
@@ -593,6 +620,8 @@
         public BooksApi(BookService bookService){
             this.bookService = bookService;
         }
+        // @Autowired also works here
+
         @RequestMapping("/api/books")
         public List<Book> index() {
             return bookService.allBooks();
@@ -611,3 +640,9 @@
         }
     }
     ```
+
+# Useful Resources:
+- [Baeldung](https://www.baeldung.com/)
+- JavaTPoint
+- Oracle Documentations
+- Spring Documentations
