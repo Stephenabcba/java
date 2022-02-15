@@ -17,17 +17,16 @@
         	<h2 class="col-2 border p-2 text-center">${gold }</h2>
         	<a href="/gold/reset" class="col-2 offset-6 link-primary text-end">Reset Progress</a>
         </div>
-        <form action="/gold/make_gold" method="POST">
         <div class="row gx-4 mb-5">
         	<div class="col">
         		<div class="card">
         			<div class="card-body">
         				<h2>Farm</h2>
         				<p>(earns 10-20 gold)</p>
-        				
-        					<input type="hidden" />
-        					<button class="btn btn-primary" name="income_type" value="farm">Find Gold!</button>
-        				
+        				<form action="/gold/make_gold" method="POST">
+        					<input type="hidden" name="income_type" value="farm"/>
+        					<button class="btn btn-primary">Find Gold!</button>
+        				</form>
         			</div>
         		</div>
         	</div>
@@ -36,10 +35,10 @@
         			<div class="card-body">
         				<h2>Cave</h2>
         				<p>(earns 5-10 gold)</p>
-        				
-        					<input type="hidden" />
-        					<button class="btn btn-primary" name="income_type" value="cave">Find Gold!</button>
-
+        				<form action="/gold/make_gold" method="POST">
+        					<input type="hidden" name="income_type" value="cave"/>
+        					<button class="btn btn-primary">Find Gold!</button>
+        				</form>
         			</div>
         		</div>
         	</div>
@@ -48,10 +47,10 @@
         			<div class="card-body">
         				<h2>House</h2>
         				<p>(earns 2-5 gold)</p>
-
-        					<input type="hidden" />
-        					<button class="btn btn-primary" name="income_type" value="house">Find Gold!</button>
-
+        				<form action="/gold/make_gold" method="POST">
+        					<input type="hidden" name="income_type" value="house"/>
+        					<button class="btn btn-primary">Find Gold!</button>
+        				</form>
         			</div>
         		</div>
         	</div>
@@ -60,10 +59,10 @@
         			<div class="card-body">
         				<h2>Casino!</h2>
         				<p>(earns/takes 0-50 gold)</p>
- 
-        					<input type="hidden" />
-        					<button class="btn btn-primary" name="income_type" value="casino">Find Gold!</button>
-
+        				<form action="/gold/make_gold" method="POST">
+        					<input type="hidden" name="income_type" value="casino"/>
+        					<button class="btn btn-primary">Find Gold!</button>
+        				</form>
         			</div>
         		</div>
         	</div>
@@ -72,15 +71,14 @@
         			<div class="card-body">
         				<h2>Spa</h2>
         				<p>(takes 5-20 gold)</p>
-
-        					<input type="hidden" />
-        					<button class="btn btn-primary" name="income_type" value="spa">Find Gold!</button>
-        				
+        				<form action="/gold/make_gold" method="POST">
+        					<input type="hidden" name="income_type" value="spa"/>
+        					<button class="btn btn-primary">Find Gold!</button>
+        				</form>
         			</div>
         		</div>
         	</div>
         </div>
-        </form>
         <h2>Activities</h2>
         <p>${message }</p>
     </div>
