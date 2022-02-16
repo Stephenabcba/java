@@ -477,6 +477,11 @@
           <input type="submit" value="Submit"/>
       </form:form>    
       ```
+      - to allow for rendering on a post/put method
+      ```jsp
+      <!-- top of page -->
+      <%@ page isErrorPage="true" %>
+      ```
 
 ## JSP magic 2
   - Running java code in jsp files
@@ -745,6 +750,9 @@
       - `@Valid`: we are running validations
       - `BindingResult result`: we can use it to check for errors
         - **Important**: The `BindingResult` parameter must be immediately following the annotated `@ModelAttribute` parameter.
+    - After validations, it's ok to render on a POST method
+      - the data is not actually sent to the database unless it was valid
+      - the use does not lose the information that they have already entered
     - adding to `BookController.java` in controllers package
     ``` java
     @GetMapping("/books/new")
@@ -770,6 +778,17 @@
     @NotNull(message="Must not be blank")
     @Min(value=100, message="A book must have at least 100 pages")
     private Integer numberOfPages;
+    ```
+    - Edit method looks almost exactly like add method, except now the method is PUT instead of POST
+      - The method is still post in the HTML
+      - Add a hidden input in the form
+    ```html
+    <input type="hidden" name="_method" value="put">
+    ```
+    - To allow for put method using hidden input:
+      - put in `application.properties`
+    ```
+    spring.mvc.hiddenmethod.filter.enabled=true
     ```
 
 # Useful Resources:
