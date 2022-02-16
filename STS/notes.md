@@ -154,8 +154,8 @@
    - data validation
       ```xml
       <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-validation</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-validation</artifactId>
       </dependency>
       ```
 
