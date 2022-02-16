@@ -102,6 +102,7 @@
          - Business logic of our application
     - Utilizing our database functionality in the [controller api](#db_controller_api)
       - logic here is similar to our controllers before db implementation
+    - We can also integrate our database functionalities into [normal webpages](#db_controller_render)
 
 # Copy Paste
 ## Dependencies
@@ -431,6 +432,51 @@
       <fmt:formatDate type="date" value="${date}">
       <fmt:formatDate type="time" value="${date}">
       ```
+   - Data binding in jsp
+     - new taglib with prefix "form"
+       - almost all elements inside the form will have this prefix except the submit button
+       - not all inputs will be called input type=xyz anymore
+         - input type=password becomes form:password
+       - for email, date, and range, you can still use form:input type="email" etc
+     - input will now have a `path` attribute instead of `name`
+       - the path names must match the attributes inside the model class
+         - ex: `Books.java` in models package has attributes title, description, language, and numberOfPages
+     - new `form:errors` tag
+       - it will display errors in page if the input didn't pass input validations in the models file
+         - ex: if title has `@NotNull` annotation, an error will be displayed in the error with path "title" if the field was empty
+           - see [here](#data_binding) for details regarding custom error messages
+         - you can style the error tags similar to regular html tags
+           - class="text-danger" etc from bootstrap
+      ```jsp
+      <!-- top of page -->
+      <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+
+      <!-- inside body -->
+      <h1>New Book</h1>
+      <form:form action="/books" method="post" modelAttribute="book">
+          <p>
+              <form:label path="title">Title</form:label>
+              <form:errors path="title"/>
+              <form:input path="title"/>
+          </p>
+          <p>
+              <form:label path="description">Description</form:label>
+              <form:errors path="description"/>
+              <form:textarea path="description"/>
+          </p>
+          <p>
+              <form:label path="language">Language</form:label>
+              <form:errors path="language"/>
+              <form:input path="language"/>
+          </p>
+          <p>
+              <form:label path="numberOfPages">Pages</form:label>
+              <form:errors path="numberOfPages"/>     
+              <form:input type="number" path="numberOfPages"/>
+          </p>    
+          <input type="submit" value="Submit"/>
+      </form:form>    
+      ```
 
 ## JSP magic 2
   - Running java code in jsp files
@@ -571,8 +617,6 @@
     - `TableNameService.java` in `com.example.projectname.services`:
     ``` java
     // ...
-    import org.springframework.stereotype.Service;
-    import com.codingdojo.mvc.models.Book;
     @Service
     public class BookService {
         // adding the book repository as a dependency
@@ -603,6 +647,18 @@
                 return null;
             }
         }
+        public Book updateBook(Long id, String title, String desc, String lang, Integer numOfPages) {
+      		Book updated_book = new Book(id,title,desc,lang,numOfPages);
+      		Optional<Book> optionalBook = bookRepository.findById(id);
+      		if (optionalBook.isPresent()) {
+      			return bookRepository.save(updated_book);
+      		} else {
+      			return null;
+      		}
+	    }
+      	public void deleteBook (Long id) {
+      		bookRepository.deleteById(id);
+      	}
     }
     ```
   - <a name="db_controller_api">Database Controller API</a>
@@ -612,8 +668,6 @@
     - `TableNameApi.java` in `com.example.projectname.controllers`:
     ``` java
     // ..
-    import com.codingdojo.mvc.models.Book;
-    import com.codingdojo.mvc.services.BookService;
     @RestController
     public class BooksApi {
         private final BookService bookService;
@@ -638,7 +692,84 @@
             Book book = bookService.findBook(id);
             return book;
         }
+        @RequestMapping(value = "/api/books/{id}", method = RequestMethod.PUT)
+      	public Book update(@PathVariable("id") Long id, @RequestParam(value = "title") String title,
+      			@RequestParam(value = "description") String desc, @RequestParam(value = "language") String lang,
+      			@RequestParam(value = "pages") Integer numOfPages) {
+      		Book book = bookService.updateBook(id, title, desc, lang, numOfPages);
+      		return book;
+      	}
+
+      	@RequestMapping(value = "/api/books/{id}", method = RequestMethod.DELETE)
+      	public void destroy(@PathVariable("id") Long id) {
+      		bookService.deleteBook(id);
+      	}
     }
+    ```
+  - <a name="db_controller_render">Database Controller With Webpage rendering</a>
+    - We will use `@Controller` annotation in our controller file
+    - we will still use tableNameService to handle database interaction
+    - Instead of returning the object, we put the object into Model model
+      - We will display the data inside a jsp page, similar to before db was introduced
+    - We return a jsp page to view
+    - `BookController.java` in controllers package
+    ``` java
+    @Controller
+    @RequestMapping("/books")
+    public class BookController {
+    	@Autowired
+    	private BookService bookservice;
+    	
+    	@GetMapping("")
+    	public String showAllBooks(Model model) {
+    		List<Book> books = bookservice.allBooks();
+    		model.addAttribute("books", books);
+    		return "index.jsp";
+    	}
+    	
+    	@GetMapping("/{bookId}")
+    	public String showBook(Model model, @PathVariable("bookId") Long bookID) {
+    		Book book = bookservice.findBook(bookID);
+    		model.addAttribute("book", book);
+    		return "show.jsp";
+    	}
+    }
+    ```
+  - <a name="data_binding">Data Binding</a>
+    - Makes form data easier to process
+    - We pass an empty instance of our model into the view
+      - Using `@ModelAttribute` annotation in the route that renders the jsp with form
+        - Utilizes Inversion of Control 
+    - The submitted form returns a filled instance of our model to the POST method
+    - New Classes & Annotations:
+      - `@Valid`: we are running validations
+      - `BindingResult result`: we can use it to check for errors
+        - **Important**: The `BindingResult` parameter must be immediately following the annotated `@ModelAttribute` parameter.
+    - adding to `BookController.java` in controllers package
+    ``` java
+    @GetMapping("/books/new")
+    public String newBook(@ModelAttribute("book") Book book) {
+        return "/books/new.jsp";
+    }
+
+    @PostMapping("/books")
+    public String create(@Valid @ModelAttribute("book") Book book, BindingResult result) {
+        if (result.hasErrors()) {
+            return "/books/new.jsp";
+        } else {
+            bookService.createBook(book);
+            return "redirect:/books";
+        }
+    }
+    ```
+    - adding custom error messages
+      - add an argument to our model file
+      - will need to specify the first argument is the value now
+      - in `Book.java` in models package
+    ``` java
+    @NotNull(message="Must not be blank")
+    @Min(value=100, message="A book must have at least 100 pages")
+    private Integer numberOfPages;
     ```
 
 # Useful Resources:
