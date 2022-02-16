@@ -783,14 +783,14 @@
       - The method is still post in the HTML
       - Add a hidden input in the form
       - Add the [line](#put_render_errors) in the jsp file to allow for rendering errors in edit page
+    - To allow for put method in HTML:
+      - using hidden input
     ```html
     <input type="hidden" name="_method" value="put">
     ```
     ```html
     <input type="hidden" name="_method" value="delete">
     ```
-    - To allow for put method in HTML:
-      - using hidden input
       - put in `application.properties`
     ```
     spring.mvc.hiddenmethod.filter.enabled=true
