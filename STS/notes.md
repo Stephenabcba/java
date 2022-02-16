@@ -785,10 +785,24 @@
     ```html
     <input type="hidden" name="_method" value="put">
     ```
+    ```html
+    <input type="hidden" name="_method" value="delete">
+    ```
     - To allow for put method using hidden input:
       - put in `application.properties`
     ```
     spring.mvc.hiddenmethod.filter.enabled=true
+    ```
+    - Delete method:
+      - make a form with post method and delete hidden input
+      - have a button to submit the form
+      - In `controller`: delete by id and redirect
+    ```java
+    @DeleteMapping("/books/{id}")
+        public String destroy(@PathVariable("id") Long id) {
+            bookService.deleteBook(id);
+            return "redirect:/books";
+        }
     ```
 
 # Useful Resources:
