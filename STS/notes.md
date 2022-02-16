@@ -477,7 +477,7 @@
           <input type="submit" value="Submit"/>
       </form:form>    
       ```
-      - to allow for rendering on a post/put method
+      - to allow for <a name="put_render_errors">rendering errors</a> on a put method
       ```jsp
       <!-- top of page -->
       <%@ page isErrorPage="true" %>
@@ -782,13 +782,15 @@
     - Edit method looks almost exactly like add method, except now the method is PUT instead of POST
       - The method is still post in the HTML
       - Add a hidden input in the form
+      - Add the [line](#put_render_errors) in the jsp file to allow for rendering errors in edit page
     ```html
     <input type="hidden" name="_method" value="put">
     ```
     ```html
     <input type="hidden" name="_method" value="delete">
     ```
-    - To allow for put method using hidden input:
+    - To allow for put method in HTML:
+      - using hidden input
       - put in `application.properties`
     ```
     spring.mvc.hiddenmethod.filter.enabled=true
