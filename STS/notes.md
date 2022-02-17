@@ -103,6 +103,7 @@
     - Utilizing our database functionality in the [controller api](#db_controller_api)
       - logic here is similar to our controllers before db implementation
     - We can also integrate our database functionalities into [normal webpages](#db_controller_render)
+    - One to one and many to many relationships can also be done
 
 # Copy Paste
 ## Dependencies
@@ -811,9 +812,276 @@
             return "redirect:/books";
         }
     ```
+    - One-to-one relationship
+      - Spring still handles building the tables for us
+        - only changes are in model files
+      - Spring also handles table joining
+        - To access data, just need to add one of the models to Model model in controller
+    ```java
+    public String xyz() {
+        model.addAttribute("person",person)
+        return "show.jsp";
+    }
+    ```
+    ```html
+    <p>this is another unrelated content in jsp file</p>
+    <!-- accessing expiration date from license, even though we did not explicitly add it to model -->
+    ${person.license.expirationDate}
+    ```
+      - new annotations:
+        - ` @OneToOne`: Defines the 1:1 relationship with another entity. There are different options that you can have in the annotation and it is extremely important that you use the correct one depending on which side of the relationship your entity is.
+        - `@OneToOne(mappedBy="person")`: This will map the license attribute in the Person class to the person attribute in the License class. It represents **the field that owns the relationship**. This element is only specified on the inverse (non-owning) side of the association.
+        - `@OneToOne(cascade=CascadeType.ALL)`: The operations that must be cascaded to the target of the association. This will make sure referential integrity is preserved in ALL actions.
+        - `@OneToOne(fetch=FetchType.LAZY)`: Whether the association should be lazily loaded or must be eagerly fetched.
+          - `LAZY`: The association is fetched when needed
+          - `EAGER`: The association is fetched immediately.
+        - `@JoinColumn(name="person_id")`: Defines mapping for composite foreign keys. It indicates that the corresponding table to this entity has a **foreign_key** to the referenced table.
+    ``` java
+    @Entity
+    @Table(name="persons")
+    public class Person {
+        
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String firstName;
+        private String lastName;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        // new from before
+        @OneToOne(mappedBy="person", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+        private License license;
+        
+        public Person() {
+            
+        }
+        // ...
+        // getters and setters removed for brevity
+        // ...
+    }
+    ```
+    ``` java
+    @Entity
+    @Table(name="licenses")
+    public class License {
+        
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String number;
+        private Date expirationDate;
+        private String state;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        // new from before
+        @OneToOne(fetch=FetchType.LAZY)
+        @JoinColumn(name="person_id")
+        private Person person;
+        public License() {
+            
+        }
+        
+        // ...
+        // getters and setters removed for brevity
+        // ...
+    }
+    ```
+    - Data binding for 1 to any (1:1 & 1:n)
+      - if we pass in an empty object (either through `new ModelName()` or `@ModelAttribute`) to the form, we can put in a `model_id` or the model `object itself` as input value inside the form
+      - following is an example of the dropdown menu for selecting a person when creating a license
+        - we will need to separately add persons(list of all person instances) to Model model
+    ```html
+    <!--- inside the form:form --->
+        <!--- Drop down select menu --->
+        <form:select path="person">
+            <c:forEach var="onePerson" items="${persons}">
+                <!--- Each option VALUE is the id of the person --->
+                <form:option value="${onePerson.id}" path="person">
+                <!--- This is what shows to the user as the option --->
+                    <c:out value="${onePerson.firstName}"/>
+                    <c:out value="${onePerson.lastName}">
+                </form:option>
+            </c:forEach>
+        </form:select>
+    <!--- ... --->
+    ```
+    - One to many relationships
+      - Main difference from 1:1 is that now one of the models has a list of another model
+        - ex: `private List<Ninja> ninjas;`
+        - some differences in annotations as well
+      - new annotations
+        - `@OneToMany`: Defines a many-valued association with one-to-many multiplicity. This may be used within an embeddable class contained within an entity class to specify a relationship to a collection of entities. Notice that in this case, our ninjas attribute is of type List<Ninja>.
+          - `@OneToMany(mappedBy="dojo")`: This will map the ninjas attribute in the Dojo class to the dojo attribute in the Ninja class.
+        - `@ManyToOne`: Defines a single-valued association to another entity class that has many-to-one multiplicity. This may be used within an embeddable class to specify a relationship from the embeddable class to an entity class. Notice that our dojo attribute is referring to the dojo_id. Therefore, this attribute gives the the dojo that a specific ninja belongs to.
+        - `@JoinColumn(name="dojo_id")`: specifies foreign key, same as in 1:1
+    ``` java
+    // ...
+    @Entity
+    @Table(name="dojos")
+    public class Dojo {
+        
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String name;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        @OneToMany(mappedBy="dojo", fetch = FetchType.LAZY)
+        private List<Ninja> ninjas;
+        
+        public Dojo() {}
+        // ...
+        // getters and setters removed for brevity
+        // ...
+    }
+
+    ```
+    ```java
+    // ..
+    @Entity
+    @Table(name="ninjas")
+    public class Ninja {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String firstName;
+        private String lastName;
+        private int age;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name="dojo_id")
+        private Dojo dojo;
+        
+        public Ninja() {}
+        // ...
+        // getters and setters removed for brevity
+        // ...
+    }
+
+    ```
 
 # Useful Resources:
 - [Baeldung](https://www.baeldung.com/)
 - JavaTPoint
 - Oracle Documentations
 - Spring Documentations
+
+# From Platform:
+`application.properties`
+```
+# Where are jsp files? HERE!
+spring.mvc.view.prefix=/WEB-INF/
+# Data Persistence
+spring.datasource.url=jdbc:mysql://localhost:3306/<<YOUR_SCHEMA_NAME>>
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.jpa.hibernate.ddl-auto=update
+# For Update and Delete method hidden inputs
+spring.mvc.hiddenmethod.filter.enabled=true
+```
+
+- dependencies in `pom.xml`
+```xml
+        <!-- DEPENDENCIES FOR STARTING SPRING PROJECTS-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- DEPENDENCIES FOR DISPLAYING JSPS AND USING JSTL TAGS -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+        </dependency>
+        <!-- DEPENDENCIES FOR INTEGRATING SQL DATABASE AND USING JPA -->
+        <!-- Note: Project will not run until a schema has been created and the 
+            proper settings in application properties are present for 
+            connecting to a database. -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- DEPENDENCY FOR USING VALIDATION ANNOTATIONS -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <!-- DEPENDENCY FOR USING BCRYPT  -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
+        <!-- DEPENDENCIES FOR BOOTSTRAP -->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>webjars-locator</artifactId>
+            <version>0.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+            <version>5.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+            <version>3.6.0</version>
+        </dependency>
+```
+- jsps
+```jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!-- c:out ; c:forEach etc. --> 
+<%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<!-- Formatting (dates) --> 
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<!-- form:form -->
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<!-- for rendering errors on PUT routes -->
+<%@ page isErrorPage="true" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tacos</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css"> <!-- change to match your file/naming structure -->
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+</head>
+<body>
+   
+</body>
+</html>
+```
