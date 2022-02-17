@@ -16,7 +16,7 @@ import javax.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 
 @Entity
-@Table(name = "tableNames")
+@Table(name = "languages")
 public class Language {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
