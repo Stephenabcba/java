@@ -600,6 +600,7 @@
     - `BookRepository` can be any name, but we usually call it model_name + Repository for clarity
     - all repository interfaces must extend `CrudRepository`, and the first data type is the name of our model (`Book` class) and the seond datatype is the primary key of our model (`Long` id)
     - CrudRepository has some built in methods that we can already utilize such as count, delete, save, etc.
+    - mySQL queries is also available by using `@Query` annotion
     - `TableNameRepository.java` in `com.example.projectname.repositories`:
     ``` java
     // ...
@@ -613,6 +614,10 @@
         Long countByTitleContaining(String search);
         // this method deletes a book that starts with a specific title
         Long deleteByTitleStartingWith(String search);
+
+        // custom mysql queries
+        @Query(value="SELECT * FROM icecreams", nativeQuery=true)
+        List<ModelName> customeMethodName();
     }
     ```
   - <a name="service">Service</a>
@@ -791,7 +796,7 @@
     ```html
     <input type="hidden" name="_method" value="delete">
     ```
-      - put in `application.properties`
+      - put the following line in `application.properties`
     ```
     spring.mvc.hiddenmethod.filter.enabled=true
     ```
