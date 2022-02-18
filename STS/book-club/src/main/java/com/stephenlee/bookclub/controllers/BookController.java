@@ -92,15 +92,7 @@ public class BookController {
         	Book curBook = bookService.findBook(id);
         	if (curBook == null) {
             	return "redirect:/books";
-            }
-        	String author = curBook.getAuthor();
-        	String title = curBook.getTitle();
-        	String thought = curBook.getThought();
-        	book.setAuthor(author);
-        	book.setTitle(title);
-        	book.setThought(thought);
-        	model.addAttribute("book", book);
-        	
+        	}
             return "editBook.jsp";
         } else {
             bookService.updateBook(id, book);
