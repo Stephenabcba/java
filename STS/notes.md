@@ -831,11 +831,13 @@
       - new annotations:
         - ` @OneToOne`: Defines the 1:1 relationship with another entity. There are different options that you can have in the annotation and it is extremely important that you use the correct one depending on which side of the relationship your entity is.
         - `@OneToOne(mappedBy="person")`: This will map the license attribute in the Person class to the person attribute in the License class. It represents **the field that owns the relationship**. This element is only specified on the inverse (non-owning) side of the association.
+          - in this case, the foreign key is `person_id` in the other table
         - `@OneToOne(cascade=CascadeType.ALL)`: The operations that must be cascaded to the target of the association. This will make sure referential integrity is preserved in ALL actions.
         - `@OneToOne(fetch=FetchType.LAZY)`: Whether the association should be lazily loaded or must be eagerly fetched.
           - `LAZY`: The association is fetched when needed
           - `EAGER`: The association is fetched immediately.
         - `@JoinColumn(name="person_id")`: Defines mapping for composite foreign keys. It indicates that the corresponding table to this entity has a **foreign_key** to the referenced table.
+          - in this case, `person_id` is the foreign key in the table
     ``` java
     @Entity
     @Table(name="persons")
@@ -914,8 +916,10 @@
       - new annotations
         - `@OneToMany`: Defines a many-valued association with one-to-many multiplicity. This may be used within an embeddable class contained within an entity class to specify a relationship to a collection of entities. Notice that in this case, our ninjas attribute is of type List<Ninja>.
           - `@OneToMany(mappedBy="dojo")`: This will map the ninjas attribute in the Dojo class to the dojo attribute in the Ninja class.
+            - dojo is the name of the foreign key in the other class, it can be called pineapple
         - `@ManyToOne`: Defines a single-valued association to another entity class that has many-to-one multiplicity. This may be used within an embeddable class to specify a relationship from the embeddable class to an entity class. Notice that our dojo attribute is referring to the dojo_id. Therefore, this attribute gives the the dojo that a specific ninja belongs to.
         - `@JoinColumn(name="dojo_id")`: specifies foreign key, same as in 1:1
+          - this is the name of the foreign key, it should match the value specified in `mappedBy`, if the main class has `(mappedBy="pineapple")`, we need `(name="pineapple_id")` here
     ``` java
     // ...
     @Entity
@@ -965,6 +969,184 @@
 
     ```
 
+    - Login and registration
+      - don't save password and confirm password in database
+      - confirm password is a member variable in the `user` model
+        - it should also have a `@Transient` annotation
+      - `User.java`
+    ``` java
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotEmpty(message="Username is required!")
+    @Size(min=3, max=30, message="Username must be between 3 and 30 characters")
+    private String userName;
+
+    @NotEmpty(message="Email is required!")
+    @Email(message="Please enter a valid email!")
+    private String email;
+
+    @NotEmpty(message="Password is required!")
+    @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+    private String password;
+
+    @Transient
+    @NotEmpty(message="Confirm Password is required!")
+    @Size(min=8, max=128, message="Confirm Password must be between 8 and 128 characters")
+    private String confirm;
+    ```
+
+      - logging in does not require saving data to database
+        - only requres **authentication**
+        - LoginUser does **not** contain `@Entity` and `@table` annotations
+        - `LoginUser.java`
+    ``` java
+    public class LoginUser {
+        
+        @NotEmpty(message="Email is required!")
+        @Email(message="Please enter a valid email!")
+        private String email;
+        
+        @NotEmpty(message="Password is required!")
+        @Size(min=8, max=128, message="Password must be between 8 and 128 characters")
+        private String password;
+        
+        public LoginUser() {}
+        
+        // TODO - Don't forget to generate getters and setters
+        
+    }
+    ```
+    - In controller, use data binding
+    ``` java
+    @Controller
+    public class HomeController {
+        
+        // Add once service is implemented:
+        // @Autowired
+        // private UserService userServ;
+        
+        @GetMapping("/")
+        public String index(Model model) {
+        
+            // Bind empty User and LoginUser objects to the JSP
+            // to capture the form input
+            model.addAttribute("newUser", new User());
+            model.addAttribute("newLogin", new LoginUser());
+            return "index.jsp";
+        }
+        
+        @PostMapping("/register")
+        public String register(@Valid @ModelAttribute("newUser") User newUser, 
+                BindingResult result, Model model, HttpSession session) {
+            
+            // TO-DO Later -- call a register method in the service 
+            // to do some extra validations and create a new user!
+            
+            if(result.hasErrors()) {
+                // Be sure to send in the empty LoginUser before 
+                // re-rendering the page.
+                model.addAttribute("newLogin", new LoginUser());
+                return "index.jsp";
+            }
+            
+            // No errors! 
+            // TO-DO Later: Store their ID from the DB in session, 
+            // in other words, log them in.
+        
+            return "redirect:/home";
+        }
+        
+        @PostMapping("/login")
+        public String login(@Valid @ModelAttribute("newLogin") LoginUser newLogin, 
+                BindingResult result, Model model, HttpSession session) {
+            
+            // Add once service is implemented:
+            // User user = userServ.login(newLogin, result);
+        
+            if(result.hasErrors()) {
+                model.addAttribute("newUser", new User());
+                return "index.jsp";
+            }
+        
+            // No errors! 
+            // TO-DO Later: Store their ID from the DB in session, 
+            // in other words, log them in.
+        
+            return "redirect:/home";
+        }
+        
+    }
+    ```
+    - Only `User` needs a repository, `LoginUser` does not need one (not stored in db)
+      - since users log in via email, `UserRepository` requires a find by email
+    ```java
+    Optional<User> findByEmail(String email);
+    ```
+    - in `UserService`
+      - pass in the object and result from controllers
+``` java
+// TO-DO: Write register and login methods!
+public User register(User newUser, BindingResult result) {
+    // TO-DO - Reject values or register if no errors:
+    if(result.hasErrors()) {
+        // Exit the method and go back to the controller 
+        // to handle the response
+        return null;
+    }
+    // Reject if email is taken (present in database)
+    Optional<User> potentialUser = userRepo.findByEmail(newLogin.getEmail());
+    if (potentialUser.isPresent()) {
+        // email taken
+    } else {
+        // email not taken
+    }
+    // Reject if password doesn't match confirmation
+    if(!newUser.getPassword().equals(newUser.getConfirm())) {
+        result.rejectValue("confirm", "Matches", "The Confirm Password must match Password!");
+    }
+    
+    // Return null if result has errors
+
+    // Hash and set password, save user to database
+    String hashed = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
+    return null;
+}
+
+// This method will be called from the controller
+// whenever a user submits a login form.
+public User login(LoginUser newLoginObject, BindingResult result) {
+    // TO-DO - Reject values:
+    if(result.hasErrors()) {
+        // Exit the method and go back to the controller 
+        // to handle the response
+        return null;
+    }
+    // Find user in the DB by email
+    // Reject if NOT present
+    Optional<User> potentialUser = userRepo.findByEmail(newLogin.getEmail());
+    if (potentialUser.isPresent()) {
+        // email taken
+    } else {
+        // email not taken
+    }
+    // Reject if BCrypt password match fails
+    if(!BCrypt.checkpw(newLogin.getPassword(), user.getPassword())) {
+        result.rejectValue("password", "Matches", "Invalid Password!");
+    }
+
+    // Return null if result has errors
+    if(result.hasErrors()) {
+        // Exit the method and go back to the controller 
+        // to handle the response
+        return null;
+    }
+    // Otherwise, return the user object
+    return user;
+}
+}
+```
 # Useful Resources:
 - [Baeldung](https://www.baeldung.com/)
 - JavaTPoint
