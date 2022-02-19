@@ -483,6 +483,8 @@
       <!-- top of page -->
       <%@ page isErrorPage="true" %>
       ```
+      - `CAUTION` if you only use `${}` instead of `<c:out value="${}"/>`, users can inject HTML tags or `<script>` tags in user input (in forms), and the script will be run.
+        - important for rendering the data from data after user input for String datatype
 
 ## JSP magic 2
   - Running java code in jsp files
@@ -1018,63 +1020,51 @@
         
     }
     ```
-    - In controller, use data binding
+    - In controller, use data binding to automatically populate the object that the forms return
+      - call validation methods in `service`
+    - `UserController.java`
     ``` java
     @Controller
-    public class HomeController {
-        
-        // Add once service is implemented:
-        // @Autowired
-        // private UserService userServ;
+    public class UserController {
         
         @GetMapping("/")
         public String index(Model model) {
         
-            // Bind empty User and LoginUser objects to the JSP
-            // to capture the form input
+            if (session.getAttribute("uuid") != null) {
+                return "redirect:/dashboard";
+            }
             model.addAttribute("newUser", new User());
             model.addAttribute("newLogin", new LoginUser());
             return "index.jsp";
         }
         
         @PostMapping("/register")
-        public String register(@Valid @ModelAttribute("newUser") User newUser, 
-                BindingResult result, Model model, HttpSession session) {
-            
-            // TO-DO Later -- call a register method in the service 
-            // to do some extra validations and create a new user!
-            
-            if(result.hasErrors()) {
-                // Be sure to send in the empty LoginUser before 
-                // re-rendering the page.
+        public String registerUser(Model model, @Valid @ModelAttribute("newUser") User newUser,
+            BindingResult result, HttpSession session) {
+            User user = userService.register(newUser, result);
+            if (result.hasErrors() || user == null) {
                 model.addAttribute("newLogin", new LoginUser());
-                return "index.jsp";
+                return "login.jsp";
+            } else {
+                session.setAttribute("uuid", user.getId());
+                session.setAttribute("loggedin_name", user.getName());
+                return "redirect:/dashboard";
             }
-            
-            // No errors! 
-            // TO-DO Later: Store their ID from the DB in session, 
-            // in other words, log them in.
-        
-            return "redirect:/home";
         }
         
         @PostMapping("/login")
         public String login(@Valid @ModelAttribute("newLogin") LoginUser newLogin, 
-                BindingResult result, Model model, HttpSession session) {
-            
-            // Add once service is implemented:
-            // User user = userServ.login(newLogin, result);
+            BindingResult result, Model model, HttpSession session) {
         
-            if(result.hasErrors()) {
+            User user = userService.login(newLogin, result);
+            if (result.hasErrors() || user == null) {
                 model.addAttribute("newUser", new User());
-                return "index.jsp";
+                return "login.jsp";
+            } else {
+                session.setAttribute("uuid", user.getId());
+                session.setAttribute("loggedin_name", user.getName());
+                return "redirect:/dashboard";
             }
-        
-            // No errors! 
-            // TO-DO Later: Store their ID from the DB in session, 
-            // in other words, log them in.
-        
-            return "redirect:/home";
         }
         
     }
@@ -1086,67 +1076,166 @@
     ```
     - in `UserService`
       - pass in the object and result from controllers
-``` java
-// TO-DO: Write register and login methods!
-public User register(User newUser, BindingResult result) {
-    // TO-DO - Reject values or register if no errors:
-    if(result.hasErrors()) {
-        // Exit the method and go back to the controller 
-        // to handle the response
-        return null;
-    }
-    // Reject if email is taken (present in database)
-    Optional<User> potentialUser = userRepo.findByEmail(newLogin.getEmail());
-    if (potentialUser.isPresent()) {
-        // email taken
-    } else {
-        // email not taken
-    }
-    // Reject if password doesn't match confirmation
-    if(!newUser.getPassword().equals(newUser.getConfirm())) {
-        result.rejectValue("confirm", "Matches", "The Confirm Password must match Password!");
-    }
-    
-    // Return null if result has errors
-
-    // Hash and set password, save user to database
-    String hashed = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
-    return null;
-}
-
-// This method will be called from the controller
-// whenever a user submits a login form.
-public User login(LoginUser newLoginObject, BindingResult result) {
-    // TO-DO - Reject values:
-    if(result.hasErrors()) {
-        // Exit the method and go back to the controller 
-        // to handle the response
-        return null;
-    }
-    // Find user in the DB by email
-    // Reject if NOT present
-    Optional<User> potentialUser = userRepo.findByEmail(newLogin.getEmail());
-    if (potentialUser.isPresent()) {
-        // email taken
-    } else {
-        // email not taken
-    }
-    // Reject if BCrypt password match fails
-    if(!BCrypt.checkpw(newLogin.getPassword(), user.getPassword())) {
-        result.rejectValue("password", "Matches", "Invalid Password!");
+      - in registration: check if input is valid, check if email exists, check if passwords match
+      - in login: check if input is valid, check if email exists, check if password match hashed password in database
+    ``` java
+    public User register(User newUser, BindingResult result) {
+        Optional<User> potentialUser = userRepo.findByEmail(newUser.getEmail());
+        if (potentialUser.isPresent()) {
+            result.rejectValue("email", "Taken", "Email already taken!");
+        }
+        if (!newUser.getPassword().equals(newUser.getPasswordConfirm())) {
+            result.rejectValue("passwordConfirm", "Matches", "The Confirm Password must match Password!");
+        }
+        if (result.hasErrors()) {
+            return null;
+        }
+        String hashed = BCrypt.hashpw(newUser.getPassword(), BCrypt.gensalt());
+        newUser.setPassword(hashed);
+        return userRepo.save(newUser);
     }
 
-    // Return null if result has errors
-    if(result.hasErrors()) {
-        // Exit the method and go back to the controller 
-        // to handle the response
-        return null;
+    public User login(LoginUser newLogin, BindingResult result) {
+        User user = null;
+        Optional<User> potentialLogin = userRepo.findByEmail(newLogin.getEmail());
+        if (!potentialLogin.isPresent()) {
+            result.rejectValue("email", "login", "Invalid Credentials");
+        } else {
+            user = potentialLogin.get();
+            if (!BCrypt.checkpw(newLogin.getPassword(), user.getPassword())) {
+                result.rejectValue("password", "login", "Invalid Credentials");
+            }
+        }
+        if (result.hasErrors()) {
+            return null;
+        }
+        return user;
     }
-    // Otherwise, return the user object
-    return user;
-}
-}
-```
+    ```
+    - Many to Many relationship (n:m)
+      - inside the database, the tables are saved as 2 main tables with an interconnecting table
+        - the interconnecting table would have 1:n relationship with both main tables
+      - implementing the tables inside spring boot `model` files:
+        - the 2 main tables are always required as separate model files
+          - it will have a `@ManyToMany` annotation
+        - the interconnecting table can either be implicitly or explicitly defined
+          - if implicitly defined, the model file does not need to be created
+          - if explicitly defined, create the model file with `@Entity` and `@Table` annotations just like regular model files
+            - the table will contain `@ManyToOne` annotations for both main tables
+          - existence of this interconnecting table will **NOT** affect implementation in the main tables
+            - if the connecting model file does not exist, you still have to specify `@JoinTable` in the main tables
+      - new annotations:
+      - `@ManyToMany`: Defines a many-valued association with many-to-many multiplicity. You will have to use this annotation on both entities.
+      - `@JsonIgnore`: We are using this annotation to solve an infinite recursion issue with Jackson and JPA. Therefore, we ignore that attribute when it's being serialized into json.
+      - `@JoinTable`: Defines the middle table the our entities will be mapped to.
+        - `@JoinTable(name="categories_products")`: The name of the middle table.
+        - `joinColumns`: The foreign key that matches the primary key of the embedded class when the tables are joined.
+        - `inverseJoinColumns`: The foreign key that matched the foreign key of the opposite class when the tables are joined.
+      - `MainTable1.java` in `models` package
+    ``` java
+    // ...
+    @Entity
+    @Table(name="products")
+    public class Product {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String name;
+        private String description;
+        private double price;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(
+            name = "categories_products", 
+            joinColumns = @JoinColumn(name = "product_id"), 
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+        )
+        private List<Category> categories;
+        
+        public Product() {}
+        // TODO Getters and Setters
+    }
+    ```
+      - `MainTable2.java` in `models` package
+    ```java
+    // ..
+    @Entity
+    @Table(name="categories")
+    public class Category {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        private String name;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        @ManyToMany(fetch = FetchType.LAZY)
+        @JoinTable(
+            name = "categories_products", 
+            joinColumns = @JoinColumn(name = "category_id"), 
+            inverseJoinColumns = @JoinColumn(name = "product_id")
+        )     
+        private List<Product> products;
+        
+        public Category() {}
+        // TODO getters and setters
+    }
+    ```
+      - OPTIONAL: middle joining table
+      - `Table1Table2.java` in `models` package
+    ```java
+    // ...
+    @Entity
+    @Table(name="categories_products")
+    public class CategoryProduct {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        @Column(updatable=false)
+        private Date createdAt;
+        private Date updatedAt;
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name="product_id")
+        private Product product;
+        
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name="category_id")
+        private Category category;
+        
+        public CategoryProduct() {}
+        // ...
+        // getters and setters removed for brevity
+        // ...
+    }
+    ```
+    - `n:m service`
+      - adding a product to a category is the same as adding a category to the product
+        - end result will both be a new entry in the joining table
+      - `findCategoryById` and `findProductById` are methods also defined in the service file
+      - Spring JPA will handle creating both foreign keys in the joining table
+    ``` java
+    // retrieve an instance of a category using another method in the service.
+    Category thisCategory = findCategoryById(categoryId);
+
+    // retrieve an instance of a product using another method in the service.
+    Product thisProduct = findProductById(productId);
+
+    // add the product to this category's list of products
+    thisCategory.getProducts().add(thisProduct);
+
+    // Save thisCategory, since you made changes to its product list.
+    categoryRepository.save(thisCategory);	
+    ```
+
+    ```java
+    // This has the same affect as above: (after retrieving thisCategory and thisProduct)
+    thisProduct.getCategories().add(thisCategory);	// add the category to this products's list of categories
+    productRepository.save(thisProduct);	// Save thisProduct, since you made changes to its category list.
+    ```
+
+
 # Useful Resources:
 - [Baeldung](https://www.baeldung.com/)
 - JavaTPoint
