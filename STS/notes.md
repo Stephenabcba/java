@@ -1356,3 +1356,13 @@ spring.mvc.hiddenmethod.filter.enabled=true
 </body>
 </html>
 ```
+
+# Quirks / Potential pitfalls of Spring Boot
+- `@ModelAttribute` and `@XMapping` has special interactions that could produce unexpected results
+  - if the variable is named `id` in pathing, the id gets bound to the object in `modelAttribute`
+    - ex: if we have `@PutMapping("/test/{id}")` and `@ModelAttribute("testObj") TestObj testObj`, `testObj` will have an id matching the value of id in putmapping
+    - As such, Spring Boot will throw type mismatch error if `TestObj` specifies id to be Long, but id was a string in the route
+  - This behavior is observed for `GET`, `POST`, and `PUT` requests
+  - This behavior is also observed if we have `@PutMapping("/test/{name}")` and TestObj has attribute `name`
+    - it appears that the behavior will trigger if the name of the variable in route matches the name of the attribute in model attribute
+  - This behavior is not observed in a `@GetMapping` if the object was added using `model.addAttribute("testObj",new TestObj())`
