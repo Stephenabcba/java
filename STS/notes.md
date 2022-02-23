@@ -433,6 +433,8 @@
       <fmt:formatDate type="date" value="${date}">
       <fmt:formatDate type="time" value="${date}">
       ```
+     - If custom date/time format is required, use `pattern="mmddyy"` tag with custom pattern
+       - see [pattern formatting here](https://docs.oracle.com/javase/8/docs/api/java/text/SimpleDateFormat.html)
    - Data binding in jsp
      - new taglib with prefix "form"
        - almost all elements inside the form will have this prefix except the submit button
@@ -1124,14 +1126,20 @@
             - the table will contain `@ManyToOne` annotations for both main tables
           - existence of this interconnecting table will **NOT** affect implementation in the main tables
             - if the connecting model file does not exist, you still have to specify `@JoinTable` in the main tables
+      - `IMPORTANT` when showing filtered content in N:M relationships, it is easier to use conditional formatting inside the JSP file
+        - ex: show all projects that the user did not partake in
+        - add entire List into Model model
+        - filter the list using `<c:if>` or `<c:choose>`
+          - ex: project.name == user.name or ninja.dojoId != dojo.id
+        - it is possible to achieve the same functionality using advanced queries in the Repository, but it is a lot more tedious.
       - new annotations:
-      - `@ManyToMany`: Defines a many-valued association with many-to-many multiplicity. You will have to use this annotation on both entities.
-      - `@JsonIgnore`: We are using this annotation to solve an infinite recursion issue with Jackson and JPA. Therefore, we ignore that attribute when it's being serialized into json.
-      - `@JoinTable`: Defines the middle table the our entities will be mapped to.
-        - `@JoinTable(name="categories_products")`: The name of the middle table.
-        - `joinColumns`: The foreign key that matches the primary key of the embedded class when the tables are joined.
-        - `inverseJoinColumns`: The foreign key that matched the foreign key of the opposite class when the tables are joined.
-      - `MainTable1.java` in `models` package
+        - `@ManyToMany`: Defines a many-valued association with many-to-many multiplicity. You will have to use this annotation on both entities.
+        - `@JsonIgnore`: We are using this annotation to solve an infinite recursion issue with Jackson and JPA. Therefore, we ignore that attribute when it's being serialized into json.
+        - `@JoinTable`: Defines the middle table the our entities will be mapped to.
+          - `@JoinTable(name="categories_products")`: The name of the middle table.
+          - `joinColumns`: The foreign key that matches the primary key of the embedded class when the tables are joined.
+          - `inverseJoinColumns`: The foreign key that matched the foreign key of the opposite class when the tables are joined.
+        - `MainTable1.java` in `models` package
     ``` java
     // ...
     @Entity
