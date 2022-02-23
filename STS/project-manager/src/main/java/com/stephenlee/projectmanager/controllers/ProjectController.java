@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,6 +61,9 @@ public class ProjectController {
 			return "redirect:/";
 		}
         Project project = projectService.findProject(id);
+        if (project==null) {
+        	return "redirect:/dashboard";
+        }
         model.addAttribute("project", project);
         return "showProject.jsp";
     }
@@ -71,6 +75,9 @@ public class ProjectController {
 			return "redirect:/";
 		}
         Project project = projectService.findProject(id);
+        if (project==null) {
+        	return "redirect:/dashboard";
+        }
         model.addAttribute("project", project);
         return "editProject.jsp";
     }
@@ -132,11 +139,12 @@ public class ProjectController {
     	taskService.createTask(task);
     	return "redirect:/projects/"+ projectId.toString() +"/tasks";
     }
-//    // route to delete user, not used.
-//    @DeleteMapping("/projects/delete/{id}")
-//    public String deleteProject(@PathVariable("id") Long id) {
-//        projectService.deleteProject(id);
-//        return "redirect:/projects";
-//    }
+    
+    // route to delete user
+    @DeleteMapping("/projects/{id}/delete")
+    public String deleteProject(@PathVariable("id") Long id) {
+        projectService.deleteProject(id);
+        return "redirect:/dashboard";
+    }
 }
 

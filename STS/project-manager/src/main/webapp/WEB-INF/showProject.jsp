@@ -31,6 +31,14 @@
             <p class="col"><fmt:formatDate type="date" pattern="MM/dd/yyyy" value="${project.dueDate}"></fmt:formatDate></p>
         </div>
         <a href="/projects/${project.id }/tasks">See tasks!</a>
+        <c:if test="${project.creator.id == uuid }">
+        <div class="d-flex justify-content-end">
+        	<form action="/projects/${project.id }/delete" method="post">
+        		<input type="hidden" name="_method" value="DELETE"/>
+        		<button class="btn btn-danger">Delete Project</button>
+        	</form>
+        </div>
+        </c:if>
     </div>
 
     <!-- For any Bootstrap that uses JS or jQuery-->
